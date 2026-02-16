@@ -1,0 +1,41 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+            toolchain: stable
+            targets: x86_64-pc-windows-msvc
+
+      - name: Build Release
+        run: cargo build --release --verbose
+
+      - name: Package Build
+        run: |
+          mkdir release
+          Copy-Item target/release/evo-sim-app.exe release/evo-sim.exe
+          Copy-Item README.md release/
+          if (Test-Path "LICENSE") { Copy-Item LICENSE release/ }
+          Compress-Archive -Path release/* -DestinationPath "evo-sim-${{ github.ref_name }}-win64.zip"
+        shell: pwsh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: evo-sim-${{ github.ref_name }}-win64.zip
+          generate_release_notes: true
