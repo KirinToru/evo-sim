@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Rust-2024-orange?style=flat-square&logo=rust">
   <img src="https://img.shields.io/badge/Platform-Windows-blue?style=flat-square">
-  <img src="https://img.shields.io/badge/license-Source%20Available-informational?style=flat-square">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square">
 </p>
 
 A simulation of evolution using neural networks and genetic algorithms, based on the [pwy.io series](https://pwy.io/posts/learning-to-fly-pt1/).
@@ -38,4 +38,4 @@ cargo test
 
 ## License
 
-Source Available. See [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](LICENSE) for details.
