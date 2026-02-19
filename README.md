@@ -47,14 +47,6 @@ This project simulates simple creatures ("birdies") evolving to survive and comp
    ```
    Then open `http://localhost:8000` in your browser.
 
-## Release
-
-To create a release, you typically:
-1. Update version numbers in `Cargo.toml`.
-2. Commit changes.
-3. Tag the release.
-4. Push the tag.
-
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
