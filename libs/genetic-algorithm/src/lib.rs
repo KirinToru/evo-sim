@@ -1,5 +1,4 @@
-use rand::seq::SliceRandom;
-use rand::{Rng, RngCore};
+use rand::prelude::*;
 use std::ops::Index;
 
 pub struct RouletteWheelSelection;
@@ -49,13 +48,13 @@ where
         }
     }
 
-    pub fn evolve<I>(&self, rng: &mut dyn RngCore, population: &[I]) -> Vec<I>
+    pub fn evolve<I>(&self, rng: &mut dyn RngCore, population: &[I]) -> (Vec<I>, Statistics)
     where
         I: Individual,
     {
         assert!(!population.is_empty());
 
-        (0..population.len())
+        let new_population = (0..population.len())
             .map(|_| {
                 let parent_a = self.selection_method.select(rng, population).chromosome();
                 let parent_b = self.selection_method.select(rng, population).chromosome();
@@ -64,7 +63,45 @@ where
                 self.mutation_method.mutate(rng, &mut child);
                 I::create(child)
             })
-            .collect()
+            .collect();
+
+        let stats = Statistics::new(population);
+
+        (new_population, stats)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Statistics {
+    pub min_fitness: f32,
+    pub max_fitness: f32,
+    pub avg_fitness: f32,
+}
+
+impl Statistics {
+    fn new<I>(population: &[I]) -> Self
+    where
+        I: Individual,
+    {
+        assert!(!population.is_empty());
+
+        let mut min_fitness = population[0].fitness();
+        let mut max_fitness = min_fitness;
+        let mut sum_fitness = 0.0;
+
+        for individual in population {
+            let fitness = individual.fitness();
+
+            min_fitness = min_fitness.min(fitness);
+            max_fitness = max_fitness.max(fitness);
+            sum_fitness += fitness;
+        }
+
+        Self {
+            min_fitness,
+            max_fitness,
+            avg_fitness: sum_fitness / (population.len() as f32),
+        }
     }
 }
 
@@ -165,7 +202,7 @@ impl MutationMethod for GaussianMutation {
             let sign = if rng.gen_bool(0.5) { -1.0 } else { 1.0 };
 
             if rng.gen_bool(self.chance as f64) {
-                *gene += sign * self.coeff * rng.r#gen::<f32>();
+                *gene += sign * self.coeff * rng.gen::<f32>();
             }
         }
     }
@@ -249,7 +286,7 @@ mod tests {
         ];
 
         for _ in 0..10 {
-            population = ga.evolve(&mut rng, &population);
+            population = ga.evolve(&mut rng, &population).0;
         }
 
         let expected_population = vec![

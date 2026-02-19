@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Learning to Fly</title>
+  <style>
+    body {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+      /* basic styling */
+    }
+
+    #viewport {
+      width: 100%;
+      height: 100%;
+      display: block;
+      /* prevent scrollbars */
+    }
+
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 4px;
+      pointer-events: auto;
+      /* ensure clicks register */
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="viewport"></canvas>
+  <div id="ui">
+    <button id="train">Fast Forward (1 gen)</button>
+    <div id="stats" style="margin-top: 5px; font-family: monospace;"></div>
+  </div>
+  <script type="module">
+    import init, { SimulationWasm } from './pkg/evo_sim_app.js';
+
+    async function run() {
+      await init();
+
+      const simulation = new SimulationWasm();
+      const viewport = document.getElementById("viewport");
+      const ctx = viewport.getContext("2d");
+      const trainBtn = document.getElementById("train");
+      const statsDiv = document.getElementById("stats");
+
+      // Adjust canvas size
+      viewport.width = window.innerWidth;
+      viewport.height = window.innerHeight;
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        viewport.width = window.innerWidth;
+        viewport.height = window.innerHeight;
+      });
+
+      trainBtn.onclick = () => {
+        console.log("Training...");
+        const stats = simulation.train();
+        console.log(stats);
+        statsDiv.innerText = stats;
+      };
+
+      function drawTriangle(x, y, rotation, size) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.beginPath();
+        ctx.moveTo(size, 0);
+        ctx.lineTo(-size, size);
+        ctx.lineTo(-size, -size);
+        ctx.closePath();
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawCircle(x, y, radius) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgb(0, 255, 128)';
+        ctx.fill();
+      }
+
+      function step() {
+        // Perform one step
+        const stats = simulation.step();
+        if (stats) {
+          statsDiv.innerText = stats;
+        }
+
+        // Get world and render
+        const world = simulation.world();
+
+        // Clear canvas
+        ctx.fillStyle = 'rgb(30, 30, 40)'; // Dark background
+        ctx.fillRect(0, 0, viewport.width, viewport.height);
+
+        // Draw foods
+        for (const food of world.foods) {
+          drawCircle(food.position.x * viewport.width, food.position.y * viewport.height, 3);
+        }
+
+        // Draw animals
+        for (const animal of world.animals) {
+          drawTriangle(
+            animal.position.x * viewport.width,
+            animal.position.y * viewport.height,
+            animal.rotation.angle,
+            8
+          );
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    run();
+  </script>
+</body>
+
+</html>

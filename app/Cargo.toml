@@ -1,7 +1,17 @@
 [package]
 name = "evo-sim-app"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
-lib-neural-network = { path = "../libs/neural-netwok" }
+wasm-bindgen = "0.2"
+lib-simulation = { path = "../libs/simulation" }
+rand = "0.8"
+getrandom = { version = "0.2", features = ["js"] }
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.4"
+# lib-genetic-algorithm needed for Statistics? No, simulation returns it. But we might need struct def?
+# if we format inside Rust, we don't need to expose struct to JS.
