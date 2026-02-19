@@ -1,4 +1,4 @@
-# Learning to Fly (evo-sim)
+# Evolution Simulation
 
 <p align="center">
   <img src="https://img.shields.io/badge/Rust-2021-orange?style=flat-square&logo=rust">
