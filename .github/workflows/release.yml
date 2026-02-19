@@ -4,13 +4,14 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build-wasm:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -19,23 +20,29 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: stable
-            targets: x86_64-pc-windows-msvc
+          toolchain: stable
+          targets: wasm32-unknown-unknown
 
-      - name: Build Release
-        run: cargo build --release --verbose
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'latest'
 
-      - name: Package Build
+      - name: Build Wasm
+        working-directory: ./app
+        run: wasm-pack build --target web
+
+      - name: Prepare Distribution
         run: |
-          mkdir release
-          Copy-Item target/release/evo-sim-app.exe release/evo-sim.exe
-          Copy-Item README.md release/
-          if (Test-Path "LICENSE") { Copy-Item LICENSE release/ }
-          Compress-Archive -Path release/* -DestinationPath "evo-sim-${{ github.ref_name }}-win64.zip"
-        shell: pwsh
+          mkdir dist
+          cp app/www/index.html dist/
+          cp -r app/pkg dist/
+          if [ -f "LICENSE" ]; then cp LICENSE dist/; fi
+          zip -r evo-sim-${{ github.ref_name }}-web.zip dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: evo-sim-${{ github.ref_name }}-win64.zip
+          files: evo-sim-${{ github.ref_name }}-web.zip
           generate_release_notes: true
